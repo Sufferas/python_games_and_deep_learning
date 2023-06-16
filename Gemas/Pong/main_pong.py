@@ -1,11 +1,14 @@
 import pygame
 import sys
 import math
+import random
 
 # Allgemeine Einstellungen
 WIDTH, HEIGHT = 800, 600
-BALL_SPEED = 1
-PADDLE_SPEED = 5
+BALL_SPEED = 1.5
+BALL_MAX_SPEED = 15
+BALL_RANDOM_Y = 5
+PADDLE_SPEED = 8
 BALL_RADIUS = 10
 PADDLE_WIDTH, PADDLE_HEIGHT = 15, 80
 FPS = 60
@@ -23,7 +26,7 @@ font = pygame.font.Font(None, 36)
 # Ball Einstellungen
 ball = pygame.Rect(WIDTH / 2, HEIGHT / 2, BALL_RADIUS * 2, BALL_RADIUS * 2)
 ball_dx = BALL_SPEED
-ball_dy = BALL_SPEED
+ball_dy = random.uniform(-BALL_RANDOM_Y, BALL_RANDOM_Y)  # Jetzt zufällig
 
 # Paddle Einstellungen
 paddle_left = pygame.Rect(0, HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT)
@@ -55,18 +58,31 @@ def check_collision():
         score_right += 1
         reset_ball()
         ball_dx = BALL_SPEED
+        ball_dy = random.uniform(-BALL_RANDOM_Y, BALL_RANDOM_Y)  # Jetzt zufällig
     elif ball.right > WIDTH:
         score_left += 1
         reset_ball()
         ball_dx = -BALL_SPEED
+        ball_dy = random.uniform(-BALL_RANDOM_Y, BALL_RANDOM_Y)  # Jetzt zufällig
 
     if ball.top < 0 or ball.bottom > HEIGHT:
         ball_dy *= -1
 
     if ball.colliderect(paddle_left):
-        ball_dx *= -1.25  # Increase speed by 5%
+        if ball_dx <= -BALL_MAX_SPEED:
+            ball_dx = -BALL_MAX_SPEED
+            ball_dx *= -1  # Increase speed by 5%
+        else:
+            ball_dx *= -1.25  # Increase speed by 5%
+
     elif ball.colliderect(paddle_right):
-        ball_dx *= -1.25  # Increase speed by 5%
+
+        if ball_dx >= BALL_MAX_SPEED:
+            ball_dx = BALL_MAX_SPEED
+            ball_dx *= -1  # Increase speed by 5%
+        else:
+            ball_dx *= -1.25  # Increase speed by 5%
+
 
 
 def move_paddle():
@@ -77,11 +93,10 @@ def move_paddle():
     if keys[pygame.K_s]:
         paddle_left.move_ip(0, PADDLE_SPEED)
 
-    # AI für das rechte Paddle
-    if paddle_right.centery < ball.centery:
-        paddle_right.move_ip(0, PADDLE_SPEED)
-    if paddle_right.centery > ball.centery:
+    if keys[pygame.K_UP]:
         paddle_right.move_ip(0, -PADDLE_SPEED)
+    if keys[pygame.K_DOWN]:
+        paddle_right.move_ip(0, PADDLE_SPEED)
 
     if paddle_left.top < 0:
         paddle_left.top = 0
@@ -95,6 +110,7 @@ def move_paddle():
 
 def reset_ball():
     ball.center = (WIDTH / 2, HEIGHT / 2)
+    ball_dy = random.uniform(-BALL_RANDOM_Y, BALL_RANDOM_Y)  # Jetzt zufällig
 
 
 def game_loop():
